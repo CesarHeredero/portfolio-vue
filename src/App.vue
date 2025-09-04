@@ -148,10 +148,17 @@ export default {
     AdditionalExperience
   },
   setup() {
+  // Variables de entorno (inyectadas en build por Vue CLI: VUE_APP_*)
+  // Usamos constantes para que el bundler reemplace en tiempo de compilación
+  const EMAILJS_PUBLIC_KEY = process.env.VUE_APP_EMAILJS_PUBLIC_KEY || ''
+  const EMAILJS_SERVICE_ID = process.env.VUE_APP_EMAILJS_SERVICE_ID || ''
+  const EMAILJS_TEMPLATE_ID = process.env.VUE_APP_EMAILJS_TEMPLATE_ID || ''
+
     const store = useStore()
     const { locale, t } = useI18n()
     const isSubmitting = ref(false)
     const submitStatus = ref(null)
+  const configError = ref(false)
 
     const currentLocale = computed(() => store.state.locale)
 
@@ -166,8 +173,14 @@ export default {
     }
 
     onMounted(() => {
-      // Inicializar EmailJS con tu Public Key
-      emailjs.init(process.env.VUE_APP_EMAILJS_PUBLIC_KEY)
+      // Validar e inicializar EmailJS
+      if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+        configError.value = true
+        // Mensaje útil en consola sin exponer secretos
+        console.error('[EmailJS] Faltan variables de entorno en build. Asegúrate de definir VUE_APP_EMAILJS_PUBLIC_KEY, VUE_APP_EMAILJS_SERVICE_ID y VUE_APP_EMAILJS_TEMPLATE_ID en el entorno de compilación (CI).')
+      } else {
+        emailjs.init(EMAILJS_PUBLIC_KEY)
+      }
       // Establecer el lang inicial del documento
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('lang', locale.value || 'es')
@@ -180,7 +193,8 @@ export default {
       currentLocale,
       setLocale,
       isSubmitting,
-      submitStatus
+      submitStatus,
+      configError
     }
   },
   data() {
@@ -198,9 +212,12 @@ export default {
       this.submitStatus = null
 
       try {
+        if (this.configError) {
+          throw new Error('EmailJS no está configurado (faltan variables de entorno en build)')
+        }
         await emailjs.send(
-          process.env.VUE_APP_EMAILJS_SERVICE_ID,
-          process.env.VUE_APP_EMAILJS_TEMPLATE_ID,
+          process.env.VUE_APP_EMAILJS_SERVICE_ID || '',
+          process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '',
           {
             from_name: this.form.name,
             from_email: this.form.email,
