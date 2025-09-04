@@ -8,7 +8,7 @@ export default {
     resume: 'CV'
   },
   hero: {
-    title: 'César Heredero',
+  title: 'César Heredero Herranz',
     subtitle: 'UX/UI Designer | Master en Diseño Gráfico, Web y Animación 3D',
     description: 'Diseñador UX/UI especializado en crear experiencias digitales intuitivas y atractivas.'
   },
