@@ -150,9 +150,9 @@ export default {
   setup() {
   // Variables de entorno (inyectadas en build por Vue CLI: VUE_APP_*)
   // Usamos constantes para que el bundler reemplace en tiempo de compilación
-  const EMAILJS_PUBLIC_KEY = process.env.VUE_APP_EMAILJS_PUBLIC_KEY || ''
-  const EMAILJS_SERVICE_ID = process.env.VUE_APP_EMAILJS_SERVICE_ID || ''
-  const EMAILJS_TEMPLATE_ID = process.env.VUE_APP_EMAILJS_TEMPLATE_ID || ''
+  const EMAILJS_PUBLIC_KEY = (process.env.VUE_APP_EMAILJS_PUBLIC_KEY || '').trim()
+  const EMAILJS_SERVICE_ID = (process.env.VUE_APP_EMAILJS_SERVICE_ID || '').trim()
+  const EMAILJS_TEMPLATE_ID = (process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '').trim()
 
     const store = useStore()
     const { locale, t } = useI18n()
@@ -179,6 +179,14 @@ export default {
         // Mensaje útil en consola sin exponer secretos
         console.error('[EmailJS] Faltan variables de entorno en build. Asegúrate de definir VUE_APP_EMAILJS_PUBLIC_KEY, VUE_APP_EMAILJS_SERVICE_ID y VUE_APP_EMAILJS_TEMPLATE_ID en el entorno de compilación (CI).')
       } else {
+        // Loguear longitudes para depurar sin exponer secretos
+        try {
+          console.info('[EmailJS] claves cargadas (longitudes):', {
+            publicKeyLen: EMAILJS_PUBLIC_KEY.length,
+            serviceIdLen: EMAILJS_SERVICE_ID.length,
+            templateIdLen: EMAILJS_TEMPLATE_ID.length
+          })
+        } catch (e) {}
         emailjs.init(EMAILJS_PUBLIC_KEY)
       }
       // Establecer el lang inicial del documento
@@ -215,10 +223,11 @@ export default {
         if (this.configError) {
           throw new Error('EmailJS no está configurado (faltan variables de entorno en build)')
         }
+        const serviceId = (process.env.VUE_APP_EMAILJS_SERVICE_ID || '').trim()
+        const templateId = (process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '').trim()
         await emailjs.send(
-          // Usar las constantes inyectadas en build
-          process.env.VUE_APP_EMAILJS_SERVICE_ID || '',
-          process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '',
+          serviceId,
+          templateId,
           {
             from_name: this.form.name,
             from_email: this.form.email,
