@@ -40,3 +40,10 @@ Configura en GitHub → Settings → Secrets and variables → Actions → New r
 - `VUE_APP_EMAILJS_TEMPLATE_ID`
 
 Tras hacer push a `main`, el workflow construirá y desplegará automáticamente.
+
+Atajo opcional con GitHub CLI (macOS):
+
+```zsh
+chmod +x scripts/setup-github-secrets.zsh
+./scripts/setup-github-secrets.zsh
+```
