@@ -208,7 +208,7 @@ export default {
         if (!resp.ok) {
           // Intentar leer detalle del error
           let detail = ''
-          try { const j = await resp.json(); detail = (j && j.message) || JSON.stringify(j) } catch (_) {}
+          try { const j = await resp.json(); detail = (j && j.message) || JSON.stringify(j) } catch (_) { detail = '' }
           throw new Error(`Formspree error: ${resp.status} ${detail}`)
         }
         this.submitStatus = { type: 'success', message: this.t('contact.success') }
