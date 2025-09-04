@@ -199,16 +199,30 @@ export default {
         const formEl = this.$refs.form
         const action = formEl && formEl.getAttribute ? formEl.getAttribute('action') : null
         if (!action) throw new Error('No se ha configurado la URL de Formspree en el formulario')
-        const formData = new FormData(formEl)
+        const payload = {
+          name: this.form.name,
+          email: this.form.email,
+          message: this.form.message
+        }
         const resp = await fetch(action, {
           method: 'POST',
-          body: formData,
-          headers: { 'Accept': 'application/json' }
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
         })
         if (!resp.ok) {
           // Intentar leer detalle del error
           let detail = ''
-          try { const j = await resp.json(); detail = (j && j.message) || JSON.stringify(j) } catch (_) { detail = '' }
+          try {
+            const j = await resp.json()
+            if (j && j.errors && Array.isArray(j.errors)) {
+              detail = j.errors.map(e => `${e.field || 'field'} ${e.message || ''}`.trim()).join('; ')
+            } else {
+              detail = (j && (j.message || j.error)) || JSON.stringify(j)
+            }
+          } catch (_) { detail = '' }
           throw new Error(`Formspree error: ${resp.status} ${detail}`)
         }
         this.submitStatus = { type: 'success', message: this.t('contact.success') }
