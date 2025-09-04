@@ -35,9 +35,7 @@ Configura en GitHub → Settings → Secrets and variables → Actions → New r
 - `FTP_USERNAME`
 - `FTP_PASSWORD`
 - `FTP_SERVER_DIR` (carpeta destino, p.ej. `/public_html/` o `/www/`)
-- `VUE_APP_EMAILJS_PUBLIC_KEY`
-- `VUE_APP_EMAILJS_SERVICE_ID`
-- `VUE_APP_EMAILJS_TEMPLATE_ID`
+- `FTP_PROTOCOL` (opcional: `ftp`, `ftps` o `sftp`. Por defecto, `ftps`)
 
 Tras hacer push a `main`, el workflow construirá y desplegará automáticamente.
 
@@ -47,3 +45,14 @@ Atajo opcional con GitHub CLI (macOS):
 chmod +x scripts/setup-github-secrets.zsh
 ./scripts/setup-github-secrets.zsh
 ```
+
+## Formulario de contacto (Formspree)
+
+El formulario usa Formspree como proveedor principal. Si quieres cambiar el endpoint, edita el atributo `action` del formulario en:
+
+- `src/App.vue`
+- `src/components/ContactInfo.vue`
+
+No son necesarios secretos ni claves para el cliente. Revisa tus envíos en tu panel de Formspree.
+
+Nota: El despliegue está configurado con “clean slate” (limpieza total del directorio remoto) para evitar restos de builds antiguas. Además, `public/.htaccess` desactiva cache para `index.html` y aplica cache largo a assets.
