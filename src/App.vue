@@ -180,13 +180,13 @@ export default {
         console.error('[EmailJS] Faltan variables de entorno en build. Asegúrate de definir VUE_APP_EMAILJS_PUBLIC_KEY, VUE_APP_EMAILJS_SERVICE_ID y VUE_APP_EMAILJS_TEMPLATE_ID en el entorno de compilación (CI).')
       } else {
         // Loguear longitudes para depurar sin exponer secretos
-        try {
+        if (typeof console !== 'undefined' && console.info) {
           console.info('[EmailJS] claves cargadas (longitudes):', {
             publicKeyLen: EMAILJS_PUBLIC_KEY.length,
             serviceIdLen: EMAILJS_SERVICE_ID.length,
             templateIdLen: EMAILJS_TEMPLATE_ID.length
           })
-        } catch (e) {}
+        }
         emailjs.init(EMAILJS_PUBLIC_KEY)
       }
       // Establecer el lang inicial del documento
