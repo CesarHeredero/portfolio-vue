@@ -125,7 +125,10 @@
 
     <footer>
       <div class="container">
-        <p>&copy; {{ new Date().getFullYear() }} {{ t('footer.rights') }}</p>
+        <p>
+          &copy; {{ new Date().getFullYear() }} {{ t('footer.rights') }}
+          <span class="build-hint"> · {{ buildShaShort }}</span>
+        </p>
       </div>
     </footer>
   </div>
@@ -133,6 +136,7 @@
 
 <script>
 import { computed, ref, onMounted } from 'vue'
+import emailjs from '@emailjs/browser'
 import { useStore } from 'vuex'
 import { useI18n } from 'vue-i18n'
 import ExperienceTimeline from './components/ExperienceTimeline.vue'
@@ -154,7 +158,7 @@ export default {
 
     const currentLocale = computed(() => store.state.locale)
 
-    const setLocale = (newLocale) => {
+  const setLocale = (newLocale) => {
       store.dispatch('setLocale', newLocale)
       locale.value = newLocale
       // Actualiza el atributo lang del documento para tecnologías asistivas
@@ -164,17 +168,23 @@ export default {
       }
     }
 
-    onMounted(() => {
+  // Exponer metadatos de build también de forma visible
+  const buildSha = process.env.VUE_APP_BUILD_SHA || 'dev'
+  const buildTime = process.env.VUE_APP_BUILD_TIME || ''
+
+  onMounted(() => {
       // Establecer el lang inicial del documento
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('lang', locale.value || 'es')
         document.documentElement.setAttribute('dir', 'ltr')
       }
       if (typeof console !== 'undefined' && console.info) {
-        console.info('[Build]', {
-          sha: process.env.VUE_APP_BUILD_SHA || 'dev',
-          time: process.env.VUE_APP_BUILD_TIME || ''
-        })
+        console.info('[Build]', { sha: buildSha, time: buildTime })
+      }
+      // Inicializar EmailJS si hay clave pública
+      const pub = process.env.VUE_APP_EMAILJS_PUBLIC_KEY && String(process.env.VUE_APP_EMAILJS_PUBLIC_KEY).trim()
+      if (pub) {
+        try { emailjs.init(pub) } catch (e) { console.warn('[EmailJS] init falló:', e) }
       }
     })
 
@@ -183,7 +193,8 @@ export default {
       currentLocale,
       setLocale,
       isSubmitting,
-      submitStatus
+      submitStatus,
+      buildShaShort: (buildSha || '').toString().substring(0, 7)
     }
   },
   data() {
@@ -201,33 +212,51 @@ export default {
       this.submitStatus = null
 
       try {
-        // Envío directo a Formspree (proveedor principal)
+        // 1) Intentar EmailJS (primario)
+        const PUBLIC_KEY = process.env.VUE_APP_EMAILJS_PUBLIC_KEY && String(process.env.VUE_APP_EMAILJS_PUBLIC_KEY).trim()
+        const SERVICE_ID = process.env.VUE_APP_EMAILJS_SERVICE_ID && String(process.env.VUE_APP_EMAILJS_SERVICE_ID).trim()
+        const TEMPLATE_ID = process.env.VUE_APP_EMAILJS_TEMPLATE_ID && String(process.env.VUE_APP_EMAILJS_TEMPLATE_ID).trim()
+
+        const canUseEmailJS = PUBLIC_KEY && SERVICE_ID && TEMPLATE_ID
+        if (canUseEmailJS) {
+          try {
+            await emailjs.send(
+              SERVICE_ID,
+              TEMPLATE_ID,
+              {
+                from_name: this.form.name,
+                reply_to: this.form.email,
+                message: this.form.message
+              },
+              { publicKey: PUBLIC_KEY }
+            )
+            this.submitStatus = { type: 'success', message: this.t('contact.success') }
+            this.form = { name: '', email: '', message: '' }
+            return
+          } catch (e) {
+            console.warn('[EmailJS] envío falló, probando Formspree…', e)
+          }
+        } else {
+          console.info('[EmailJS] variables no configuradas; se usará Formspree')
+        }
+
+        // 2) Fallback a Formspree
         const formEl = this.$refs.form
         const action = formEl && formEl.getAttribute ? formEl.getAttribute('action') : null
         if (!action) throw new Error('No se ha configurado la URL de Formspree en el formulario')
-        const payload = {
-          name: this.form.name,
-          email: this.form.email,
-          message: this.form.message
-        }
+        const payload = { name: this.form.name, email: this.form.email, message: this.form.message }
         const resp = await fetch(action, {
           method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
         if (!resp.ok) {
-          // Intentar leer detalle del error
           let detail = ''
           try {
             const j = await resp.json()
             if (j && j.errors && Array.isArray(j.errors)) {
               detail = j.errors.map(e => `${e.field || 'field'} ${e.message || ''}`.trim()).join('; ')
-            } else {
-              detail = (j && (j.message || j.error)) || JSON.stringify(j)
-            }
+            } else { detail = (j && (j.message || j.error)) || JSON.stringify(j) }
           } catch (_) { detail = '' }
           throw new Error(`Formspree error: ${resp.status} ${detail}`)
         }
