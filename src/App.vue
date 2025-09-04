@@ -193,8 +193,8 @@ export default {
       currentLocale,
       setLocale,
       isSubmitting,
-      submitStatus,
-      configError
+  submitStatus,
+  configError
     }
   },
   data() {
@@ -216,6 +216,7 @@ export default {
           throw new Error('EmailJS no está configurado (faltan variables de entorno en build)')
         }
         await emailjs.send(
+          // Usar las constantes inyectadas en build
           process.env.VUE_APP_EMAILJS_SERVICE_ID || '',
           process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '',
           {
@@ -235,7 +236,10 @@ export default {
           message: ''
         }
       } catch (error) {
-        console.error('Error al enviar el correo:', error)
+        // Mostrar más detalle en consola para depuración en producción
+        const status = error && error.status ? error.status : 'unknown'
+        const text = error && error.text ? error.text : (error && error.message ? error.message : 'no message')
+        console.error('[EmailJS] Error al enviar el correo:', { status, text })
         this.submitStatus = {
           type: 'error',
           message: this.t('contact.error')
