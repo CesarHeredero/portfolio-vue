@@ -135,7 +135,6 @@
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useI18n } from 'vue-i18n'
-import emailjs from '@emailjs/browser'
 import ExperienceTimeline from './components/ExperienceTimeline.vue'
 import NavMenu from './components/NavMenu.vue'
 import AdditionalExperience from './components/AdditionalExperience.vue'
@@ -148,17 +147,10 @@ export default {
     AdditionalExperience
   },
   setup() {
-  // Variables de entorno (inyectadas en build por Vue CLI: VUE_APP_*)
-  // Usamos constantes para que el bundler reemplace en tiempo de compilación
-  const EMAILJS_PUBLIC_KEY = (process.env.VUE_APP_EMAILJS_PUBLIC_KEY || '').trim()
-  const EMAILJS_SERVICE_ID = (process.env.VUE_APP_EMAILJS_SERVICE_ID || '').trim()
-  const EMAILJS_TEMPLATE_ID = (process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '').trim()
-
     const store = useStore()
     const { locale, t } = useI18n()
     const isSubmitting = ref(false)
     const submitStatus = ref(null)
-  const configError = ref(false)
 
     const currentLocale = computed(() => store.state.locale)
 
@@ -173,22 +165,6 @@ export default {
     }
 
     onMounted(() => {
-      // Validar e inicializar EmailJS
-      if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
-        configError.value = true
-        // Mensaje útil en consola sin exponer secretos
-        console.error('[EmailJS] Faltan variables de entorno en build. Asegúrate de definir VUE_APP_EMAILJS_PUBLIC_KEY, VUE_APP_EMAILJS_SERVICE_ID y VUE_APP_EMAILJS_TEMPLATE_ID en el entorno de compilación (CI).')
-      } else {
-        // Loguear longitudes para depurar sin exponer secretos
-        if (typeof console !== 'undefined' && console.info) {
-          console.info('[EmailJS] claves cargadas (longitudes):', {
-            publicKeyLen: EMAILJS_PUBLIC_KEY.length,
-            serviceIdLen: EMAILJS_SERVICE_ID.length,
-            templateIdLen: EMAILJS_TEMPLATE_ID.length
-          })
-        }
-        emailjs.init(EMAILJS_PUBLIC_KEY)
-      }
       // Establecer el lang inicial del documento
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('lang', locale.value || 'es')
@@ -201,8 +177,7 @@ export default {
       currentLocale,
       setLocale,
       isSubmitting,
-  submitStatus,
-  configError
+      submitStatus
     }
   },
   data() {
@@ -220,63 +195,27 @@ export default {
       this.submitStatus = null
 
       try {
-        if (this.configError) {
-          throw new Error('EmailJS no está configurado (faltan variables de entorno en build)')
+        // Envío directo a Formspree (proveedor principal)
+        const formEl = this.$refs.form
+        const action = formEl && formEl.getAttribute ? formEl.getAttribute('action') : null
+        if (!action) throw new Error('No se ha configurado la URL de Formspree en el formulario')
+        const formData = new FormData(formEl)
+        const resp = await fetch(action, {
+          method: 'POST',
+          body: formData,
+          headers: { 'Accept': 'application/json' }
+        })
+        if (!resp.ok) {
+          // Intentar leer detalle del error
+          let detail = ''
+          try { const j = await resp.json(); detail = (j && j.message) || JSON.stringify(j) } catch (_) {}
+          throw new Error(`Formspree error: ${resp.status} ${detail}`)
         }
-        const serviceId = (process.env.VUE_APP_EMAILJS_SERVICE_ID || '').trim()
-        const templateId = (process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '').trim()
-        const publicKey = (process.env.VUE_APP_EMAILJS_PUBLIC_KEY || '').trim()
-        await emailjs.send(
-          serviceId,
-          templateId,
-          {
-            from_name: this.form.name,
-            from_email: this.form.email,
-            message: this.form.message
-          },
-          { publicKey }
-        )
-
-        this.submitStatus = {
-          type: 'success',
-          message: this.t('contact.success')
-        }
-        this.form = {
-          name: '',
-          email: '',
-          message: ''
-        }
+        this.submitStatus = { type: 'success', message: this.t('contact.success') }
+        this.form = { name: '', email: '', message: '' }
       } catch (error) {
-        // Mostrar más detalle en consola para depuración en producción
-        const status = error && error.status ? error.status : 'unknown'
-        const text = error && error.text ? error.text : (error && error.message ? error.message : 'no message')
-        console.error('[EmailJS] Error al enviar el correo:', { status, text })
-
-        // Fallback: intentar enviar vía Formspree si está configurado en el atributo action del formulario
-        try {
-          const formEl = this.$refs.form
-          const action = formEl && formEl.getAttribute ? formEl.getAttribute('action') : null
-          if (action) {
-            const formData = new FormData(formEl)
-            const resp = await fetch(action, {
-              method: 'POST',
-              body: formData,
-              headers: { 'Accept': 'application/json' }
-            })
-            if (resp.ok) {
-              this.submitStatus = { type: 'success', message: this.t('contact.success') }
-              this.form = { name: '', email: '', message: '' }
-              this.isSubmitting = false
-              return
-            }
-          }
-        } catch (fallbackErr) {
-          console.error('[Formspree] Fallback error:', fallbackErr)
-        }
-        this.submitStatus = {
-          type: 'error',
-          message: this.t('contact.error')
-        }
+        console.error('[Contacto] Error al enviar:', error)
+        this.submitStatus = { type: 'error', message: this.t('contact.error') }
       } finally {
         this.isSubmitting = false
       }
