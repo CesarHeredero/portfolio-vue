@@ -1,23 +1,25 @@
+# Node/Vue
+node_modules/
+dist/
+.cache/
+.vuepress/dist
+
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+
+# VS Code
+.vscode/
+
+# SO
 .DS_Store
-node_modules
-/dist
 
-
-# local env files
-.env.local
-.env.*.local
-
-# Log files
-npm-debug.log*
+# Logs
 yarn-debug.log*
 yarn-error.log*
+npm-debug.log*
 pnpm-debug.log*
 
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Coverage
+coverage/
