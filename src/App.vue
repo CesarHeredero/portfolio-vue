@@ -251,6 +251,28 @@ export default {
         const status = error && error.status ? error.status : 'unknown'
         const text = error && error.text ? error.text : (error && error.message ? error.message : 'no message')
         console.error('[EmailJS] Error al enviar el correo:', { status, text })
+
+        // Fallback: intentar enviar vía Formspree si está configurado en el atributo action del formulario
+        try {
+          const formEl = this.$refs.form
+          const action = formEl && formEl.getAttribute ? formEl.getAttribute('action') : null
+          if (action) {
+            const formData = new FormData(formEl)
+            const resp = await fetch(action, {
+              method: 'POST',
+              body: formData,
+              headers: { 'Accept': 'application/json' }
+            })
+            if (resp.ok) {
+              this.submitStatus = { type: 'success', message: this.t('contact.success') }
+              this.form = { name: '', email: '', message: '' }
+              this.isSubmitting = false
+              return
+            }
+          }
+        } catch (fallbackErr) {
+          console.error('[Formspree] Fallback error:', fallbackErr)
+        }
         this.submitStatus = {
           type: 'error',
           message: this.t('contact.error')
