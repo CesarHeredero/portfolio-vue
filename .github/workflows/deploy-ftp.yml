@@ -27,7 +27,7 @@ jobs:
           VUE_APP_EMAILJS_TEMPLATE_ID: ${{ secrets.VUE_APP_EMAILJS_TEMPLATE_ID }}
         run: npm run build
 
-  - name: Deploy via FTP
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
