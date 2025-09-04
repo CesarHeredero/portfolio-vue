@@ -225,6 +225,7 @@ export default {
         }
         const serviceId = (process.env.VUE_APP_EMAILJS_SERVICE_ID || '').trim()
         const templateId = (process.env.VUE_APP_EMAILJS_TEMPLATE_ID || '').trim()
+        const publicKey = (process.env.VUE_APP_EMAILJS_PUBLIC_KEY || '').trim()
         await emailjs.send(
           serviceId,
           templateId,
@@ -232,7 +233,8 @@ export default {
             from_name: this.form.name,
             from_email: this.form.email,
             message: this.form.message
-          }
+          },
+          { publicKey }
         )
 
         this.submitStatus = {
