@@ -47,11 +47,11 @@
             <i class="fas fa-user"></i>
             <span>{{ t('nav.about') }}</span>
           </a>
-          <a href="#experiencia" @click="closeMenu">
+          <a href="#experience" @click="closeMenu">
             <i class="fas fa-briefcase"></i>
             <span>{{ t('nav.experience') }}</span>
           </a>
-          <a href="#contacto" @click="closeMenu">
+          <a href="#contact" @click="closeMenu">
             <i class="fas fa-envelope"></i>
             <span>{{ t('nav.contact') }}</span>
           </a>
