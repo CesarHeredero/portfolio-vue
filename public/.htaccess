@@ -1,3 +1,21 @@
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# SPA fallback (opcional, descomentar si se navega por rutas)
+# RewriteEngine On
+# RewriteBase /
+# RewriteRule ^index\.html$ - [L]
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule . /index.html [L]
 Options -MultiViews
 RewriteEngine On
 RewriteBase /

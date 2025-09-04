@@ -18,7 +18,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build metadata
+        id: meta
+        run: echo "time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
       - name: Build
+        env:
+          VUE_APP_BUILD_SHA: ${{ github.sha }}
+          VUE_APP_BUILD_TIME: ${{ steps.meta.outputs.time }}
         run: npm run build
 
       - name: Deploy via FTP

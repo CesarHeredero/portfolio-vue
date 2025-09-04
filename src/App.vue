@@ -170,6 +170,12 @@ export default {
         document.documentElement.setAttribute('lang', locale.value || 'es')
         document.documentElement.setAttribute('dir', 'ltr')
       }
+      if (typeof console !== 'undefined' && console.info) {
+        console.info('[Build]', {
+          sha: process.env.VUE_APP_BUILD_SHA || 'dev',
+          time: process.env.VUE_APP_BUILD_TIME || ''
+        })
+      }
     })
 
     return {
