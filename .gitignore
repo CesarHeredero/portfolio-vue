@@ -1,0 +1,25 @@
+# Node/Vue
+node_modules/
+dist/
+.cache/
+.vuepress/dist
+
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+
+# VS Code
+.vscode/
+
+# SO
+.DS_Store
+
+# Logs
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+pnpm-debug.log*
+
+# Coverage
+coverage/

@@ -1,0 +1,47 @@
+name: Build and Deploy (FTP)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          VUE_APP_BUILD_SHA: ${{ github.sha }}
+          VUE_APP_BUILD_TIME: ${{ steps.meta.outputs.time }}
+        run: npm run build
+        
+      - name: Build metadata
+        id: meta
+        run: echo "time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ secrets.FTP_PROTOCOL && secrets.FTP_PROTOCOL || 'ftps' }}
+          server-dir: ${{ endsWith(secrets.FTP_SERVER_DIR, '/') && secrets.FTP_SERVER_DIR || format('{0}/', secrets.FTP_SERVER_DIR) }}
+          local-dir: dist/
+          dangerous-clean-slate: true
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/.DS_Store
