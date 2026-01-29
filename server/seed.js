@@ -8,7 +8,7 @@ import SpecialSection from "./src/models/SpecialSection.js";
 
 dotenv.config();
 
-// Cambia localhost por mongo
+// Cambia esto en la línea 11 de tus archivos de script
 const MONGO_URL = process.env.MONGO_URL || "mongodb://mongo:27017/cesar_intranet";
 
 const categories = [
