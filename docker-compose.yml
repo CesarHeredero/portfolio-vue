@@ -4,7 +4,7 @@ services:
   # --- TU PORTFOLIO (WEB PERSONAL) ---
   # Asegúrate de que la carpeta se llama 'portfolio-cv' o cámbialo abajo
   portfolio-personal:
-    build: ../portfolio-cv  
+    build: ./portfolio-cv  # Asegúrate de que este nombre coincide con tu carpeta en VS Code
     restart: unless-stopped
     expose:
       - "80"
