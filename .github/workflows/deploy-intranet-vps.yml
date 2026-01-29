@@ -22,11 +22,8 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd ${{ secrets.VPS_PATH }}
-            git pull
-            docker compose build
-            docker compose up -d --remove-orphans
+          port: ${{ secrets.VPS_PORT }}
+          fingerprint: ${{ secrets.VPS_SSH_FINGERPRINT }} # O añade la siguiente línea:
+          script_stop: true
+          
