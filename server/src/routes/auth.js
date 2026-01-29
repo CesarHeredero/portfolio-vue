@@ -31,12 +31,18 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Email y password son requeridos" });
   }
 
-  const user = await User.findOne({ email });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     return res.status(401).json({ message: "Credenciales inválidas" });
   }
 
-  const ok = await bcrypt.compare(password, user.passwordHash);
+  const passwordHash = user.passwordHash || user.password || user.hash;
+  if (!passwordHash) {
+    return res.status(401).json({ message: "Credenciales inválidas" });
+  }
+
+  const ok = await bcrypt.compare(password, passwordHash);
   if (!ok) {
     return res.status(401).json({ message: "Credenciales inválidas" });
   }
