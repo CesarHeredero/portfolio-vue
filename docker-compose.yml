@@ -1,17 +1,18 @@
 version: "3.9"
 
 services:
-  # --- TU PORTFOLIO (WEB PERSONAL) ---
-  # Asegúrate de que la carpeta se llama 'portfolio-cv' o cámbialo abajo
+  # --- TU PORTFOLIO ---
+  # Ahora usamos el punto (.) porque el código está en la raíz según tu VS Code
   portfolio-personal:
-    build: ./portfolio-cv  # Asegúrate de que este nombre coincide con tu carpeta en VS Code
+    build: .  # El punto (.) le dice a Docker: "usa los archivos que están aquí mismo"
+    container_name: portfolio-personal
     restart: unless-stopped
     expose:
       - "80"
     networks:
       - gestor-web_default
 
-  # --- LA INTRANET (BASE DE DATOS) ---
+  # --- LA INTRANET (MONGO) ---
   mongo:
     image: mongo:7
     restart: unless-stopped
