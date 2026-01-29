@@ -24,6 +24,10 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          fingerprint: ${{ secrets.VPS_SSH_FINGERPRINT }} # O añade la siguiente línea:
           script_stop: true
-          
+          # Eliminamos fingerprint para evitar errores de conexión la primera vez
+          script: |
+            cd ${{ secrets.VPS_PATH }}
+            git pull origin main
+            sudo docker compose build
+            sudo docker compose up -d --remove-orphans
