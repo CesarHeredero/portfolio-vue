@@ -1,6 +1,17 @@
 version: "3.9"
 
 services:
+  # --- TU PORTFOLIO (WEB PERSONAL) ---
+  # Asegúrate de que la carpeta se llama 'portfolio-cv' o cámbialo abajo
+  portfolio-personal:
+    build: ../portfolio-cv  
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - gestor-web_default
+
+  # --- LA INTRANET (BASE DE DATOS) ---
   mongo:
     image: mongo:7
     restart: unless-stopped
@@ -13,6 +24,7 @@ services:
     networks:
       - intranet
 
+  # --- LA INTRANET (BACKEND) ---
   backend:
     build: ./server
     restart: unless-stopped
@@ -31,7 +43,8 @@ services:
       - intranet
       - gestor-web_default
 
-  frontend:
+  # --- LA INTRANET (FRONTEND) ---
+  intranet-frontend:
     build: ./client
     restart: unless-stopped
     depends_on:
