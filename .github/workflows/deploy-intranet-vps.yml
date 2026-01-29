@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Deploy via SSH
@@ -25,9 +25,14 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script_stop: true
-          # Eliminamos fingerprint para evitar errores de conexión la primera vez
           script: |
+            # Entrar en la carpeta del proyecto
             cd ${{ secrets.VPS_PATH }}
+            
+            # Bajar los últimos cambios de GitHub
             git pull origin main
+            
+            # Reconstruir las imágenes y levantar los contenedores
+            # Usamos sudo porque tu usuario de VPS lo requiere
             sudo docker compose build
             sudo docker compose up -d --remove-orphans
