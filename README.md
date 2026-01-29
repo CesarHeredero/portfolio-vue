@@ -1,5 +1,38 @@
 # portfolio-vue
 
+## Intranet (Docker + Monorepo)
+
+Este repositorio incluye una intranet en `/client` (Vue 3 + Vite) y `/server` (Node.js + Express), manteniendo el portfolio público actual en la raíz del repo.
+
+### Puesta en marcha rápida
+
+- Ajusta variables en `server/.env.example` y crea tu `.env`.
+- Levanta los servicios:
+	- `docker compose up -d --build`
+- Semilla inicial de categorías:
+	- `docker compose exec backend node seed.js`
+
+### Deploy en VPS
+
+Ejecuta `./deploy.sh` en el VPS para hacer `git pull`, reconstruir y levantar los contenedores.
+
+### CI/CD (GitHub Actions → VPS)
+
+Workflow: `.github/workflows/deploy-intranet-vps.yml`
+
+Secrets requeridos en GitHub:
+- `VPS_HOST`
+- `VPS_USER`
+- `VPS_PORT`
+- `VPS_SSH_KEY` (clave privada)
+- `VPS_PATH` (ruta del repo en el VPS)
+
+### Dominio intranet (intracesar.cesarheredero.com)
+
+El frontend de la intranet se sirve en el subdominio `intracesar.cesarheredero.com`.
+El contenedor de Nginx del frontend ya proxya `/api` y `/uploads` al backend, así que
+desde el cliente basta con usar `VITE_API_BASE=/api`.
+
 ## Project setup
 ```
 npm install

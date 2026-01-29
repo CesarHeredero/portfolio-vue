@@ -1,0 +1,32 @@
+name: Deploy Intranet VPS
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "client/**"
+      - "server/**"
+      - "docker-compose.yml"
+      - ".github/workflows/deploy-intranet-vps.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: ${{ secrets.VPS_PORT }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.VPS_PATH }}
+            git pull
+            docker compose build
+            docker compose up -d --remove-orphans
