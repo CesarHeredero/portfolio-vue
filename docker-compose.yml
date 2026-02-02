@@ -4,8 +4,7 @@ services:
   # --- TU PORTFOLIO ---
   # Ahora usamos el punto (.) porque el código está en la raíz según tu VS Code
   portfolio-personal:
-    build: .  # El punto (.) le dice a Docker: "usa los archivos que están aquí mismo"
-    container_name: portfolio-personal
+    build: ../portfolio-cv  # Carpeta del portfolio público
     restart: unless-stopped
     expose:
       - "80"
