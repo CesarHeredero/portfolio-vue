@@ -4,7 +4,7 @@ services:
   # --- TU PORTFOLIO ---
   # Ahora usamos el punto (.) porque el código está en la raíz según tu VS Code
   portfolio-personal:
-    build: ../portfolio-cv  # Carpeta del portfolio público
+    build: ../portfolio  # Carpeta del portfolio público
     restart: unless-stopped
     expose:
       - "80"
