@@ -7,7 +7,7 @@ services:
     build: ../portfolio  # Carpeta del portfolio público
     restart: unless-stopped
     expose:
-      - "81"
+      - "80"
     networks:
       - gestor-web_default
 
