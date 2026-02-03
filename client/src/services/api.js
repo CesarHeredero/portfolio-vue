@@ -52,4 +52,13 @@ export const api = {
         headers: buildHeaders(token),
       })
     ),
+  translate: async (payload, token, signal) =>
+    handleResponse(
+      await fetch(`${API_BASE}/translate`, {
+        method: "POST",
+        headers: buildHeaders(token),
+        body: JSON.stringify(payload),
+        signal,
+      })
+    ),
 };

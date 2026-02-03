@@ -5,6 +5,10 @@ import Skill from "./src/models/Skill.js";
 import Job from "./src/models/Job.js";
 import SecondaryExperience from "./src/models/SecondaryExperience.js";
 import SpecialSection from "./src/models/SpecialSection.js";
+import About from "./src/models/About.js";
+import Content from "./src/models/Content.js";
+import enContent from "../src/locales/en.js";
+import esContent from "../src/locales/es.js";
 
 dotenv.config();
 
@@ -166,20 +170,49 @@ const specialSections = [
   },
 ];
 
+const aboutSections = [
+  {
+    title: esContent.about?.title || "Sobre mí",
+    titleEn: enContent.about?.title || "About Me",
+    description: esContent.about?.description || "",
+    descriptionEn: enContent.about?.description || "",
+    isVisible: true,
+  },
+];
+
+const localizedContent = [
+  { locale: "en", data: enContent, isVisible: true },
+  { locale: "es", data: esContent, isVisible: true },
+];
+
 const run = async () => {
   try {
     await mongoose.connect(MONGO_URL);
-    const counts = await Promise.all([
+    const [
+      categoryCount,
+      skillCount,
+      jobCount,
+      secondaryCount,
+      specialCount,
+      aboutCount,
+      contentCount,
+    ] = await Promise.all([
       Category.countDocuments(),
       Skill.countDocuments(),
       Job.countDocuments(),
       SecondaryExperience.countDocuments(),
       SpecialSection.countDocuments(),
+      About.countDocuments(),
+      Content.countDocuments(),
     ]);
 
-    const total = counts.reduce((acc, value) => acc + value, 0);
-
-    if (total === 0) {
+    if (
+      categoryCount === 0 &&
+      skillCount === 0 &&
+      jobCount === 0 &&
+      secondaryCount === 0 &&
+      specialCount === 0
+    ) {
       await Category.insertMany(categories);
       await Skill.insertMany(skills);
       await Job.insertMany(jobs);
@@ -187,7 +220,21 @@ const run = async () => {
       await SpecialSection.insertMany(specialSections);
       console.log("Seed completado: categorías, skills y experiencia creadas.");
     } else {
-      console.log("Seed omitido: la base de datos ya tiene datos.");
+      console.log("Seed parcial: datos principales ya existen.");
+    }
+
+    if (aboutCount === 0) {
+      await About.insertMany(aboutSections);
+      console.log("Seed completado: sección Sobre mí creada.");
+    } else {
+      console.log("Seed omitido: sección Sobre mí ya existe.");
+    }
+
+    if (contentCount === 0) {
+      await Content.insertMany(localizedContent);
+      console.log("Seed completado: contenido localizado creado.");
+    } else {
+      console.log("Seed omitido: contenido localizado ya existe.");
     }
   } catch (error) {
     console.error("Error al ejecutar seed:", error);

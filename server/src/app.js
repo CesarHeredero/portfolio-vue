@@ -10,8 +10,11 @@ import skillsRouter from "./routes/skills.js";
 import jobsRouter from "./routes/jobs.js";
 import secondaryExperiencesRouter from "./routes/secondary-experiences.js";
 import specialSectionsRouter from "./routes/special-sections.js";
+import aboutRouter from "./routes/about.js";
+import contentRouter from "./routes/content.js";
 import authRouter from "./routes/auth.js";
 import uploadsRouter from "./routes/uploads.js";
+import translateRouter from "./routes/translate.js";
 
 const app = express();
 
@@ -40,6 +43,9 @@ app.use("/api/skills", skillsRouter);
 app.use("/api/jobs", jobsRouter);
 app.use("/api/secondary-experiences", secondaryExperiencesRouter);
 app.use("/api/special-sections", specialSectionsRouter);
+app.use("/api/about", aboutRouter);
+app.use("/api/content", contentRouter);
+app.use("/api/translate", translateRouter);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Ruta no encontrada" });

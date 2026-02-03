@@ -2,8 +2,10 @@ import mongoose from "mongoose";
 
 const projectSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
-    description: { type: String, required: true },
+  title: { type: String, required: true, trim: true },
+  titleEn: { type: String, default: "" },
+  description: { type: String, required: true },
+  descriptionEn: { type: String, default: "" },
     mainImage: { type: String, default: "" },
     techStack: { type: [String], default: [] },
     link: { type: String, default: "" },
