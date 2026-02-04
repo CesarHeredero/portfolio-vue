@@ -7,6 +7,13 @@ import en from './locales/en'
 
 const CONTENT_API_BASE = process.env.VUE_APP_CONTENT_API_BASE
 
+const fetchJsonNoCache = async (url) => {
+  const target = new URL(url)
+  target.searchParams.set('_t', Date.now().toString())
+  const response = await fetch(target.toString(), { cache: 'no-store' })
+  return response
+}
+
 const loadRemoteMessages = async () => {
   if (!CONTENT_API_BASE) {
     return { es, en }
@@ -14,8 +21,8 @@ const loadRemoteMessages = async () => {
 
   try {
     const [esResponse, enResponse] = await Promise.all([
-      fetch(`${CONTENT_API_BASE}/content/es`),
-      fetch(`${CONTENT_API_BASE}/content/en`)
+      fetchJsonNoCache(`${CONTENT_API_BASE}/content/es`),
+      fetchJsonNoCache(`${CONTENT_API_BASE}/content/en`)
     ])
 
     if (!esResponse.ok || !enResponse.ok) {
