@@ -218,6 +218,17 @@ export default {
         try { emailjs.init(pub) } catch (e) { console.warn('[EmailJS] init falló:', e) }
       }
 
+      const pickLatest = (items) => {
+        if (!Array.isArray(items)) return null
+        return items
+          .filter((item) => item && item.isVisible !== false)
+          .sort((a, b) => {
+            const aDate = new Date(a.updatedAt || a.createdAt || 0).getTime()
+            const bDate = new Date(b.updatedAt || b.createdAt || 0).getTime()
+            return bDate - aDate
+          })[0]
+      }
+
       if (intranetApi.hasApi) {
         try {
           const [aboutPayload, skillsPayload] = await Promise.all([
@@ -225,9 +236,7 @@ export default {
             intranetApi.get('skills')
           ])
 
-          if (Array.isArray(aboutPayload) && aboutPayload.length > 0) {
-            aboutEntry.value = aboutPayload[0]
-          }
+          aboutEntry.value = pickLatest(aboutPayload)
 
           if (Array.isArray(skillsPayload)) {
             skills.value = skillsPayload

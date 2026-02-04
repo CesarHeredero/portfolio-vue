@@ -7,12 +7,13 @@ const buildUrl = (path) => {
 };
 
 const fetchJson = async (path) => {
-  const url = buildUrl(path);
-  if (!url) {
+  const baseUrl = buildUrl(path);
+  if (!baseUrl) {
     return null;
   }
-
-  const response = await fetch(url);
+  const url = new URL(baseUrl);
+  url.searchParams.set("_t", Date.now().toString());
+  const response = await fetch(url.toString(), { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Error cargando ${path}`);
   }
