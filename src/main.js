@@ -5,7 +5,12 @@ import App from './App.vue'
 import es from './locales/es'
 import en from './locales/en'
 
-const CONTENT_API_BASE = process.env.VUE_APP_CONTENT_API_BASE
+const runtimeConfig = typeof window !== 'undefined' ? window.__APP_CONFIG__ : null
+const CONTENT_API_BASE = (runtimeConfig && runtimeConfig.CONTENT_API_BASE) || process.env.VUE_APP_CONTENT_API_BASE
+
+if (typeof console !== 'undefined' && console.info) {
+  console.info('[Config]', { CONTENT_API_BASE })
+}
 
 const fetchJsonNoCache = async (url) => {
   const target = new URL(url)
