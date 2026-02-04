@@ -7,6 +7,7 @@ import SecondaryExperience from "./src/models/SecondaryExperience.js";
 import SpecialSection from "./src/models/SpecialSection.js";
 import About from "./src/models/About.js";
 import Content from "./src/models/Content.js";
+import Project from "./src/models/Project.js";
 import enContent from "../src/locales/en.js";
 import esContent from "../src/locales/es.js";
 
@@ -64,85 +65,97 @@ const skills = [
   { name: "n8n", category: "Tools", level: 3, isVisible: true },
 ];
 
-const jobs = [
-  {
-    company: "Devoteam",
-    title: "UX/UI Consultant",
-    period: "December 2016 - Present",
-    description:
-      "Creación de UX/UI para proyectos nacionales e internacionales. Participante en el hackathon " +
-      "Cardio Xplore" +
-      " organizado por Daiichi-Sankyo, con premio europeo.",
-    skills: ["UX/UI Design", "Sketch", "Prototyping", "Design Thinking", "User Research"],
-    highlights: [
-      "Premio europeo Cardio Xplore (Daiichi-Sankyo)",
-      "Prototipado y diseño multi-plataforma",
-    ],
-    notableClients: ["Toyota", "Hyundai", "Sacyl", "Interflora", "SHAI Tajo"],
+const toList = (value) =>
+  (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const esJobs = esContent.experience?.jobs || {};
+const enJobs = enContent.experience?.jobs || {};
+const jobs = Object.entries(esJobs).map(([key, job]) => ({
+  company: job.company,
+  title: job.title,
+  titleEn: enJobs[key]?.title || "",
+  period: job.period,
+  description: job.description,
+  descriptionEn: enJobs[key]?.description || "",
+  skills: toList(job.skills),
+  highlights: [],
+  notableClients: [],
+  isVisible: true,
+}));
+
+const esAdditional = esContent.experience?.additional?.items || [];
+const enAdditional = enContent.experience?.additional?.items || [];
+
+const secondaryFromAdditional = esAdditional.map((item, index) => ({
+  title: item.title,
+  titleEn: enAdditional[index]?.title || "",
+  role: item.skills || "",
+  roleEn: enAdditional[index]?.skills || "",
+  date: item.period,
+  description: item.description || "",
+  descriptionEn: enAdditional[index]?.description || "",
+  isVisible: true,
+}));
+
+const esOther = esContent.experience?.other || {};
+const enOther = enContent.experience?.other || {};
+const otherKeys = ["mulafest", "delux", "chello", "serena"];
+const secondaryFromOther = otherKeys
+  .filter((key) => esOther[key])
+  .map((key) => ({
+    title: esOther[key].title,
+    titleEn: enOther[key]?.title || "",
+    role: esOther[key].role,
+    roleEn: enOther[key]?.role || "",
+    date: esOther[key].date,
+    description: "",
+    descriptionEn: "",
     isVisible: true,
-  },
-  {
-    company: "Pamicom",
-    title: "UX/UI Consultant",
-    period: "July 2016 - November 2016",
-    description:
-      "UX/UI design para mejorar la web corporativa de pymes y el proyecto Referencia2.",
-    skills: ["UX/UI Design", "WordPress", "Web Design", "Layout"],
-    highlights: ["Proyecto Referencia2", "Mejora web corporativa"],
-    notableClients: [],
-    isVisible: true,
-  },
-  {
-    company: "Succodimore",
-    title: "UX Consultant and Layout Designer",
-    period: "June 2015 - May 2016",
-    description:
-      "Creación de flujos de navegación, investigación UX y coordinación con equipos para la distribuidora italiana.",
-    skills: ["UX Design", "User Research", "Layout", "Email Design"],
-    highlights: ["Investigación UX", "Coordinación interdepartamental"],
-    notableClients: [],
-    isVisible: true,
-  },
-  {
-    company: "Me Gusta verte sonreír",
-    title: "UX/UI Consultant and Layout Designer",
-    period: "2015 - 2016",
-    description:
-      "Colaboración en UX/UI para un sitio de organización de encuentros y actividades.",
-    skills: ["UX/UI Design", "WordPress", "Web Design", "Layout"],
-    highlights: ["Experiencia de usuario simple e intuitiva"],
-    notableClients: [],
-    isVisible: true,
-  },
-];
+  }));
 
 const secondaryExperiences = [
+  ...secondaryFromAdditional,
+  ...secondaryFromOther,
+];
+
+const projects = [
   {
-    title: "Mulafest 2014",
-    role: "Video Editor",
-    date: "June 2014",
-    description: "Edición y postproducción audiovisual para el evento.",
+    title: "Sistema de Diseño UI",
+    titleEn: "Sistema de Diseño UI",
+    description:
+      "Diseño y desarrollo de un sistema de diseño completo para una aplicación web empresarial, incluyendo componentes reutilizables y documentación detallada.",
+    descriptionEn:
+      "Diseño y desarrollo de un sistema de diseño completo para una aplicación web empresarial, incluyendo componentes reutilizables y documentación detallada.",
+    mainImage: "https://via.placeholder.com/400x300",
+    techStack: ["Figma", "Vue.js", "Storybook", "SCSS"],
+    link: "https://design-system-demo.com",
     isVisible: true,
   },
   {
-    title: "Delux Madrid",
-    role: "Machine Room and MTI",
-    date: "Summers 2009 and 2012",
-    description: "Soporte técnico en sala de máquinas y coordinación MTI.",
+    title: "E-commerce UX Redesign",
+    titleEn: "E-commerce UX Redesign",
+    description:
+      "Rediseño completo de la experiencia de usuario de una plataforma e-commerce, mejorando la conversión y satisfacción del usuario.",
+    descriptionEn:
+      "Rediseño completo de la experiencia de usuario de una plataforma e-commerce, mejorando la conversión y satisfacción del usuario.",
+    mainImage: "https://via.placeholder.com/400x300",
+    techStack: ["UX Research", "UI Design", "Prototipado", "Figma"],
+    link: "https://ecommerce-redesign.com",
     isVisible: true,
   },
   {
-    title: "Chello Multicanal",
-    role: "Duplicates Department",
-    date: "Summer 2010",
-    description: "Gestión de duplicados y soporte técnico audiovisual.",
-    isVisible: true,
-  },
-  {
-    title: "Serena Audiovisual",
-    role: "Machine Room Internship",
-    date: "April 2009 - June 2009",
-    description: "Prácticas en sala de máquinas audiovisual.",
+    title: "App de Gestión Empresarial",
+    titleEn: "App de Gestión Empresarial",
+    description:
+      "Diseño y desarrollo de una aplicación web para gestión empresarial con enfoque en usabilidad y eficiencia.",
+    descriptionEn:
+      "Diseño y desarrollo de una aplicación web para gestión empresarial con enfoque en usabilidad y eficiencia.",
+    mainImage: "https://via.placeholder.com/400x300",
+    techStack: ["React", "TypeScript", "Material UI", "Node.js"],
+    link: "https://business-app-demo.com",
     isVisible: true,
   },
 ];
@@ -194,6 +207,7 @@ const run = async () => {
       jobCount,
       secondaryCount,
       specialCount,
+      projectCount,
       aboutCount,
       contentCount,
     ] = await Promise.all([
@@ -202,23 +216,39 @@ const run = async () => {
       Job.countDocuments(),
       SecondaryExperience.countDocuments(),
       SpecialSection.countDocuments(),
+      Project.countDocuments(),
       About.countDocuments(),
       Content.countDocuments(),
     ]);
 
-    if (
-      categoryCount === 0 &&
-      skillCount === 0 &&
-      jobCount === 0 &&
-      secondaryCount === 0 &&
-      specialCount === 0
-    ) {
+    if (categoryCount === 0) {
       await Category.insertMany(categories);
+    }
+    if (skillCount === 0) {
       await Skill.insertMany(skills);
+    }
+    if (jobCount === 0) {
       await Job.insertMany(jobs);
+    }
+    if (secondaryCount === 0) {
       await SecondaryExperience.insertMany(secondaryExperiences);
+    }
+    if (specialCount === 0) {
       await SpecialSection.insertMany(specialSections);
-      console.log("Seed completado: categorías, skills y experiencia creadas.");
+    }
+    if (projectCount === 0) {
+      await Project.insertMany(projects);
+    }
+
+    if (
+      categoryCount === 0 ||
+      skillCount === 0 ||
+      jobCount === 0 ||
+      secondaryCount === 0 ||
+      specialCount === 0 ||
+      projectCount === 0
+    ) {
+      console.log("Seed completado: datos principales creados.");
     } else {
       console.log("Seed parcial: datos principales ya existen.");
     }
