@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 import Category from "./src/models/Category.js";
 import Skill from "./src/models/Skill.js";
 import Job from "./src/models/Job.js";
@@ -8,10 +12,32 @@ import SpecialSection from "./src/models/SpecialSection.js";
 import About from "./src/models/About.js";
 import Content from "./src/models/Content.js";
 import Project from "./src/models/Project.js";
-import enContent from "../src/locales/en.js";
-import esContent from "../src/locales/es.js";
+import User from "./src/models/User.js";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const resolveLocaleModule = async (relativePaths) => {
+  for (const relativePath of relativePaths) {
+    const filePath = path.resolve(__dirname, relativePath);
+    if (fs.existsSync(filePath)) {
+      const module = await import(pathToFileURL(filePath).href);
+      return module.default;
+    }
+  }
+  throw new Error("No se encontraron archivos de locales para el seed.");
+};
+
+const enContent = await resolveLocaleModule([
+  "../src/locales/en.js",
+  "./locales/en.js",
+]);
+const esContent = await resolveLocaleModule([
+  "../src/locales/es.js",
+  "./locales/es.js",
+]);
 
 // Cambia esto en la línea 11 de tus archivos de script
 const MONGO_URL = process.env.MONGO_URL || "mongodb://mongo:27017/cesar_intranet";
@@ -198,6 +224,9 @@ const localizedContent = [
   { locale: "es", data: esContent, isVisible: true },
 ];
 
+const adminEmail = process.env.ADMIN_EMAIL;
+const adminPassword = process.env.ADMIN_PASSWORD;
+
 const run = async () => {
   try {
     await mongoose.connect(MONGO_URL);
@@ -265,6 +294,23 @@ const run = async () => {
       console.log("Seed completado: contenido localizado creado.");
     } else {
       console.log("Seed omitido: contenido localizado ya existe.");
+    }
+
+    if (adminEmail && adminPassword) {
+      const normalizedEmail = adminEmail.trim().toLowerCase();
+      const passwordHash = await bcrypt.hash(adminPassword, 10);
+      const existingAdmin = await User.findOne({ email: normalizedEmail });
+
+      if (existingAdmin) {
+        existingAdmin.passwordHash = passwordHash;
+        await existingAdmin.save();
+        console.log("Seed completado: usuario admin actualizado.");
+      } else {
+        await User.create({ email: normalizedEmail, passwordHash });
+        console.log("Seed completado: usuario admin creado.");
+      }
+    } else {
+      console.log("Seed omitido: ADMIN_EMAIL/ADMIN_PASSWORD no configurados.");
     }
   } catch (error) {
     console.error("Error al ejecutar seed:", error);
