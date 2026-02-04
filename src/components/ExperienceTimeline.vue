@@ -1,13 +1,13 @@
 <template>
   <div class="timeline">
-    <div v-for="(job, index) in jobs" :key="index" class="timeline-item">
+    <div v-for="(job, index) in displayJobs" :key="job.id || index" class="timeline-item">
       <div class="timeline-content">
-        <div class="timeline-date">{{ t(`experience.jobs.${job.id}.period`) }}</div>
-        <h3>{{ t(`experience.jobs.${job.id}.title`) }}</h3>
-        <h4>{{ t(`experience.jobs.${job.id}.company`) }}</h4>
-        <p>{{ t(`experience.jobs.${job.id}.description`) }}</p>
+        <div class="timeline-date">{{ job.period }}</div>
+        <h3>{{ job.title }}</h3>
+        <h4>{{ job.company }}</h4>
+        <p>{{ job.description }}</p>
         <div class="skills-used">
-          <span v-for="(skill, skillIndex) in t(`experience.jobs.${job.id}.skills`).split(',')" :key="skillIndex">{{ skill.trim() }}</span>
+          <span v-for="(skill, skillIndex) in job.skills" :key="skillIndex">{{ skill }}</span>
         </div>
       </div>
     </div>
@@ -15,30 +15,80 @@
 </template>
 
 <script>
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { intranetApi } from '../services/intranetApi'
 
 export default {
   name: 'ExperienceTimeline',
   setup() {
-    const { t } = useI18n()
-    return { t }
-  },
-  data() {
-    return {
-      jobs: [
-        {
-          id: 'devoteam'
-        },
-        {
-          id: 'pamicom'
-        },
-        {
-          id: 'succodimore'
-        },
-        {
-          id: 'megusta'
+    const { t, locale } = useI18n()
+    const apiJobs = ref([])
+
+    const fallbackJobs = computed(() => [
+      {
+        id: 'devoteam',
+        title: t('experience.jobs.devoteam.title'),
+        company: t('experience.jobs.devoteam.company'),
+        period: t('experience.jobs.devoteam.period'),
+        description: t('experience.jobs.devoteam.description'),
+        skills: t('experience.jobs.devoteam.skills').split(',').map((s) => s.trim())
+      },
+      {
+        id: 'pamicom',
+        title: t('experience.jobs.pamicom.title'),
+        company: t('experience.jobs.pamicom.company'),
+        period: t('experience.jobs.pamicom.period'),
+        description: t('experience.jobs.pamicom.description'),
+        skills: t('experience.jobs.pamicom.skills').split(',').map((s) => s.trim())
+      },
+      {
+        id: 'succodimore',
+        title: t('experience.jobs.succodimore.title'),
+        company: t('experience.jobs.succodimore.company'),
+        period: t('experience.jobs.succodimore.period'),
+        description: t('experience.jobs.succodimore.description'),
+        skills: t('experience.jobs.succodimore.skills').split(',').map((s) => s.trim())
+      },
+      {
+        id: 'megusta',
+        title: t('experience.jobs.megusta.title'),
+        company: t('experience.jobs.megusta.company'),
+        period: t('experience.jobs.megusta.period'),
+        description: t('experience.jobs.megusta.description'),
+        skills: t('experience.jobs.megusta.skills').split(',').map((s) => s.trim())
+      }
+    ])
+
+    const displayJobs = computed(() => {
+      if (!apiJobs.value.length) {
+        return fallbackJobs.value
+      }
+      return apiJobs.value.map((job) => ({
+        id: job._id,
+        title: locale.value === 'en' ? job.titleEn || job.title : job.title,
+        company: job.company,
+        period: job.period,
+        description: locale.value === 'en' ? job.descriptionEn || job.description : job.description,
+        skills: job.skills || []
+      }))
+    })
+
+    onMounted(async () => {
+      if (!intranetApi.hasApi) return
+      try {
+        const payload = await intranetApi.get('jobs')
+        if (Array.isArray(payload)) {
+          apiJobs.value = payload
         }
-      ]
+      } catch (error) {
+        apiJobs.value = []
+      }
+    })
+
+    return {
+      displayJobs,
+      t
     }
   }
 }

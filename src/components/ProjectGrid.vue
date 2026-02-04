@@ -1,6 +1,6 @@
 <template>
   <div class="projects-grid">
-    <div v-for="(project, index) in projects" :key="index" class="project-card">
+    <div v-for="(project, index) in displayProjects" :key="project.id || index" class="project-card">
       <div class="project-image">
         <img :src="project.image" :alt="project.title">
       </div>
@@ -24,36 +24,73 @@
 </template>
 
 <script>
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { intranetApi } from '../services/intranetApi'
+
 export default {
   name: 'ProjectGrid',
-  data() {
-    return {
-      projects: [
-        {
-          title: 'Sistema de Diseño UI',
-          description: 'Diseño y desarrollo de un sistema de diseño completo para una aplicación web empresarial, incluyendo componentes reutilizables y documentación detallada.',
-          image: 'https://via.placeholder.com/400x300',
-          technologies: ['Figma', 'Vue.js', 'Storybook', 'SCSS'],
-          demo: 'https://design-system-demo.com',
-          github: 'https://github.com/cesarheredero/design-system'
-        },
-        {
-          title: 'E-commerce UX Redesign',
-          description: 'Rediseño completo de la experiencia de usuario de una plataforma e-commerce, mejorando la conversión y satisfacción del usuario.',
-          image: 'https://via.placeholder.com/400x300',
-          technologies: ['UX Research', 'UI Design', 'Prototipado', 'Figma'],
-          demo: 'https://ecommerce-redesign.com',
-          github: null
-        },
-        {
-          title: 'App de Gestión Empresarial',
-          description: 'Diseño y desarrollo de una aplicación web para gestión empresarial con enfoque en usabilidad y eficiencia.',
-          image: 'https://via.placeholder.com/400x300',
-          technologies: ['React', 'TypeScript', 'Material UI', 'Node.js'],
-          demo: 'https://business-app-demo.com',
-          github: 'https://github.com/cesarheredero/business-app'
+  setup() {
+    const { locale } = useI18n()
+    const apiProjects = ref([])
+
+    const fallbackProjects = [
+      {
+        title: 'Sistema de Diseño UI',
+        description: 'Diseño y desarrollo de un sistema de diseño completo para una aplicación web empresarial, incluyendo componentes reutilizables y documentación detallada.',
+        image: 'https://via.placeholder.com/400x300',
+        technologies: ['Figma', 'Vue.js', 'Storybook', 'SCSS'],
+        demo: 'https://design-system-demo.com',
+        github: 'https://github.com/cesarheredero/design-system'
+      },
+      {
+        title: 'E-commerce UX Redesign',
+        description: 'Rediseño completo de la experiencia de usuario de una plataforma e-commerce, mejorando la conversión y satisfacción del usuario.',
+        image: 'https://via.placeholder.com/400x300',
+        technologies: ['UX Research', 'UI Design', 'Prototipado', 'Figma'],
+        demo: 'https://ecommerce-redesign.com',
+        github: null
+      },
+      {
+        title: 'App de Gestión Empresarial',
+        description: 'Diseño y desarrollo de una aplicación web para gestión empresarial con enfoque en usabilidad y eficiencia.',
+        image: 'https://via.placeholder.com/400x300',
+        technologies: ['React', 'TypeScript', 'Material UI', 'Node.js'],
+        demo: 'https://business-app-demo.com',
+        github: 'https://github.com/cesarheredero/business-app'
+      }
+    ]
+
+    const displayProjects = computed(() => {
+      if (!apiProjects.value.length) return fallbackProjects
+
+      return apiProjects.value.map((project) => ({
+        id: project._id,
+        title: locale.value === 'en' ? project.titleEn || project.title : project.title,
+        description: locale.value === 'en'
+          ? project.descriptionEn || project.description
+          : project.description,
+        image: project.mainImage || 'https://via.placeholder.com/400x300',
+        technologies: project.techStack || [],
+        demo: project.link || '',
+        github: project.github || null
+      }))
+    })
+
+    onMounted(async () => {
+      if (!intranetApi.hasApi) return
+      try {
+        const payload = await intranetApi.get('projects')
+        if (Array.isArray(payload)) {
+          apiProjects.value = payload
         }
-      ]
+      } catch (error) {
+        apiProjects.value = []
+      }
+    })
+
+    return {
+      displayProjects
     }
   }
 }

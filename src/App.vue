@@ -38,8 +38,8 @@
 
       <section id="sobre-mi" class="about">
         <div class="container">
-          <h2>{{ t('about.title') }}</h2>
-          <p>{{ t('about.description') }}</p>
+          <h2>{{ aboutTitle }}</h2>
+          <p>{{ aboutDescription }}</p>
           <div class="skills">
             <h3>{{ t('about.skills.title') }}</h3>
             <div class="skills-grid">
@@ -47,11 +47,12 @@
                 <i class="fas fa-paint-brush"></i>
                 <h4>{{ t('about.skills.design') }}</h4>
                 <ul>
-                  <li>UX/UI Design</li>
-                  <li>Prototyping</li>
-                  <li>User Research</li>
-                  <li>Design Systems</li>
-                  <li>Figma</li>
+                  <li
+                    v-for="(skill, index) in (skillsByCategory.Design.length ? skillsByCategory.Design : fallbackSkills.Design)"
+                    :key="`design-${index}`"
+                  >
+                    {{ currentLocale === 'en' ? (skill.nameEn || skill.name || skill) : (skill.name || skill) }}
+                  </li>
                 </ul>
               </div>
               <!-- <div class="skill-item">
@@ -69,11 +70,12 @@
                 <i class="fas fa-tools"></i>
                 <h4>{{ t('about.skills.tools') }}</h4>
                 <ul>
-                  <li>Jira</li>
-                  <li>Confluence</li>
-                  <li>IA</li>
-                  <li>Miro</li>
-                  <li>Agile/Scrum</li>
+                  <li
+                    v-for="(skill, index) in (skillsByCategory.Tools.length ? skillsByCategory.Tools : fallbackSkills.Tools)"
+                    :key="`tools-${index}`"
+                  >
+                    {{ currentLocale === 'en' ? (skill.nameEn || skill.name || skill) : (skill.name || skill) }}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -142,6 +144,7 @@ import { useI18n } from 'vue-i18n'
 import ExperienceTimeline from './components/ExperienceTimeline.vue'
 import NavMenu from './components/NavMenu.vue'
 import AdditionalExperience from './components/AdditionalExperience.vue'
+import { intranetApi } from './services/intranetApi'
 
 export default {
   name: 'App',
@@ -157,6 +160,34 @@ export default {
     const submitStatus = ref(null)
 
     const currentLocale = computed(() => store.state.locale)
+    const aboutEntry = ref(null)
+    const skills = ref([])
+    const skillsByCategory = computed(() => {
+      const grouped = { Design: [], Development: [], Tools: [] }
+      skills.value.forEach((skill) => {
+        if (grouped[skill.category]) {
+          grouped[skill.category].push(skill)
+        }
+      })
+      return grouped
+    })
+    const fallbackSkills = {
+      Design: ['UX/UI Design', 'Prototyping', 'User Research', 'Design Systems', 'Figma'],
+      Tools: ['Jira', 'Confluence', 'IA', 'Miro', 'Agile/Scrum']
+    }
+
+    const aboutTitle = computed(() => {
+      if (!aboutEntry.value) return t('about.title')
+      return currentLocale.value === 'en'
+        ? aboutEntry.value.titleEn || aboutEntry.value.title
+        : aboutEntry.value.title
+    })
+    const aboutDescription = computed(() => {
+      if (!aboutEntry.value) return t('about.description')
+      return currentLocale.value === 'en'
+        ? aboutEntry.value.descriptionEn || aboutEntry.value.description
+        : aboutEntry.value.description
+    })
 
   const setLocale = (newLocale) => {
       store.dispatch('setLocale', newLocale)
@@ -172,7 +203,7 @@ export default {
   const buildSha = process.env.VUE_APP_BUILD_SHA || 'dev'
   const buildTime = process.env.VUE_APP_BUILD_TIME || ''
 
-  onMounted(() => {
+  onMounted(async () => {
       // Establecer el lang inicial del documento
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('lang', locale.value || 'es')
@@ -186,6 +217,25 @@ export default {
       if (pub) {
         try { emailjs.init(pub) } catch (e) { console.warn('[EmailJS] init falló:', e) }
       }
+
+      if (intranetApi.hasApi) {
+        try {
+          const [aboutPayload, skillsPayload] = await Promise.all([
+            intranetApi.get('about'),
+            intranetApi.get('skills')
+          ])
+
+          if (Array.isArray(aboutPayload) && aboutPayload.length > 0) {
+            aboutEntry.value = aboutPayload[0]
+          }
+
+          if (Array.isArray(skillsPayload)) {
+            skills.value = skillsPayload
+          }
+        } catch (error) {
+          // fallback to local
+        }
+      }
     })
 
     return {
@@ -194,7 +244,11 @@ export default {
       setLocale,
       isSubmitting,
       submitStatus,
-      buildShaShort: (buildSha || '').toString().substring(0, 7)
+      buildShaShort: (buildSha || '').toString().substring(0, 7),
+      aboutTitle,
+      aboutDescription,
+      skillsByCategory,
+      fallbackSkills
     }
   },
   data() {

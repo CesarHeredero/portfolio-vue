@@ -5,36 +5,68 @@ import App from './App.vue'
 import es from './locales/es'
 import en from './locales/en'
 
-const i18n = createI18n({
-  legacy: false,
-  locale: 'es',
-  fallbackLocale: 'es',
-  messages: {
-    es,
-    en
-  }
-})
+const CONTENT_API_BASE = process.env.VUE_APP_CONTENT_API_BASE
 
-const store = createStore({
-  state() {
+const loadRemoteMessages = async () => {
+  if (!CONTENT_API_BASE) {
+    return { es, en }
+  }
+
+  try {
+    const [esResponse, enResponse] = await Promise.all([
+      fetch(`${CONTENT_API_BASE}/content/es`),
+      fetch(`${CONTENT_API_BASE}/content/en`)
+    ])
+
+    if (!esResponse.ok || !enResponse.ok) {
+      return { es, en }
+    }
+
+    const esPayload = await esResponse.json()
+    const enPayload = await enResponse.json()
+
     return {
-      locale: 'es'
+      es: esPayload.data || es,
+      en: enPayload.data || en
     }
-  },
-  mutations: {
-    setLocale(state, locale) {
-      state.locale = locale
-      i18n.global.locale.value = locale
-    }
-  },
-  actions: {
-    setLocale({ commit }, locale) {
-      commit('setLocale', locale)
-    }
+  } catch (error) {
+    return { es, en }
   }
-})
+}
 
-const app = createApp(App)
-app.use(i18n)
-app.use(store)
-app.mount('#app')
+const bootstrap = async () => {
+  const messages = await loadRemoteMessages()
+
+  const i18n = createI18n({
+    legacy: false,
+    locale: 'es',
+    fallbackLocale: 'es',
+    messages
+  })
+
+  const store = createStore({
+    state() {
+      return {
+        locale: 'es'
+      }
+    },
+    mutations: {
+      setLocale(state, locale) {
+        state.locale = locale
+        i18n.global.locale.value = locale
+      }
+    },
+    actions: {
+      setLocale({ commit }, locale) {
+        commit('setLocale', locale)
+      }
+    }
+  })
+
+  const app = createApp(App)
+  app.use(i18n)
+  app.use(store)
+  app.mount('#app')
+}
+
+bootstrap()

@@ -2,53 +2,78 @@
   <div class="additional-experience skills">
     <h3>{{ t('experience.additional.title') }}</h3>
     <div class="skills-grid">
-      <div v-for="experience in additionalExperiences" :key="experience.id" class="skill-item">
-        <i class="fas fa-briefcase"></i>
-        <h4>{{ t(experience.titleKey) }}</h4>
-        <div class="period">{{ t(experience.periodKey) }}</div>
-        <p>{{ t(experience.descriptionKey) }}</p>
-        <ul>
-          <li v-for="(skill, i) in t(experience.skillsKey).split(',')" :key="i">{{ skill.trim() }}</li>
-        </ul>
-      </div>
+      <template v-if="hasRemote">
+        <div v-for="experience in remoteAdditional" :key="experience.id" class="skill-item">
+          <i class="fas fa-briefcase"></i>
+          <h4>{{ experience.title }}</h4>
+          <div class="period">{{ experience.date }}</div>
+          <p>{{ experience.description }}</p>
+          <ul v-if="experience.skills.length">
+            <li v-for="(skill, i) in experience.skills" :key="i">{{ skill }}</li>
+          </ul>
+        </div>
+      </template>
+      <template v-else>
+        <div v-for="experience in fallbackAdditional" :key="experience.id" class="skill-item">
+          <i class="fas fa-briefcase"></i>
+          <h4>{{ t(experience.titleKey) }}</h4>
+          <div class="period">{{ t(experience.periodKey) }}</div>
+          <p>{{ t(experience.descriptionKey) }}</p>
+          <ul>
+            <li v-for="(skill, i) in t(experience.skillsKey).split(',')" :key="i">{{ skill.trim() }}</li>
+          </ul>
+        </div>
+      </template>
     </div>
 
     <!-- Experiencia en otras áreas -->
     <section class="other-experience">
       <h2>{{ t('experience.other.title') }}</h2>
       <div class="experience-grid">
-        <div class="experience-item">
-          <div class="icon-container">
-            <i class="fas fa-video"></i>
+        <template v-if="hasRemote">
+          <div v-for="experience in remoteOther" :key="experience.id" class="experience-item">
+            <div class="icon-container">
+              <i class="fas fa-video"></i>
+            </div>
+            <h3>{{ experience.title }}</h3>
+            <p class="date">{{ experience.date }}</p>
+            <p class="role">{{ experience.role }}</p>
           </div>
-          <h3>{{ t('experience.other.mulafest.title') }}</h3>
-          <p class="date">{{ t('experience.other.mulafest.date') }}</p>
-          <p class="role">{{ t('experience.other.mulafest.role') }}</p>
-        </div>
-        <div class="experience-item">
-          <div class="icon-container">
-            <i class="fas fa-film"></i>
+        </template>
+        <template v-else>
+          <div class="experience-item">
+            <div class="icon-container">
+              <i class="fas fa-video"></i>
+            </div>
+            <h3>{{ t('experience.other.mulafest.title') }}</h3>
+            <p class="date">{{ t('experience.other.mulafest.date') }}</p>
+            <p class="role">{{ t('experience.other.mulafest.role') }}</p>
           </div>
-          <h3>{{ t('experience.other.delux.title') }}</h3>
-          <p class="date">{{ t('experience.other.delux.date') }}</p>
-          <p class="role">{{ t('experience.other.delux.role') }}</p>
-        </div>
-        <div class="experience-item">
-          <div class="icon-container">
-            <i class="fas fa-tv"></i>
+          <div class="experience-item">
+            <div class="icon-container">
+              <i class="fas fa-film"></i>
+            </div>
+            <h3>{{ t('experience.other.delux.title') }}</h3>
+            <p class="date">{{ t('experience.other.delux.date') }}</p>
+            <p class="role">{{ t('experience.other.delux.role') }}</p>
           </div>
-          <h3>{{ t('experience.other.chello.title') }}</h3>
-          <p class="date">{{ t('experience.other.chello.date') }}</p>
-          <p class="role">{{ t('experience.other.chello.role') }}</p>
-        </div>
-        <div class="experience-item">
-          <div class="icon-container">
-            <i class="fas fa-camera"></i>
+          <div class="experience-item">
+            <div class="icon-container">
+              <i class="fas fa-tv"></i>
+            </div>
+            <h3>{{ t('experience.other.chello.title') }}</h3>
+            <p class="date">{{ t('experience.other.chello.date') }}</p>
+            <p class="role">{{ t('experience.other.chello.role') }}</p>
           </div>
-          <h3>{{ t('experience.other.serena.title') }}</h3>
-          <p class="date">{{ t('experience.other.serena.date') }}</p>
-          <p class="role">{{ t('experience.other.serena.role') }}</p>
-        </div>
+          <div class="experience-item">
+            <div class="icon-container">
+              <i class="fas fa-camera"></i>
+            </div>
+            <h3>{{ t('experience.other.serena.title') }}</h3>
+            <p class="date">{{ t('experience.other.serena.date') }}</p>
+            <p class="role">{{ t('experience.other.serena.role') }}</p>
+          </div>
+        </template>
       </div>
     </section>
 
@@ -78,14 +103,17 @@
 </template>
 
 <script>
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { intranetApi } from '../services/intranetApi'
 
 export default {
   name: 'AdditionalExperience',
   setup() {
     const { t, locale } = useI18n()
-    // Definir las claves de traducción para cada experiencia
-    const additionalExperiences = [
+    const remoteExperiences = ref([])
+
+    const fallbackAdditional = [
       {
         id: 1,
         titleKey: 'experience.additional.items.0.title',
@@ -101,7 +129,52 @@ export default {
         skillsKey: 'experience.additional.items.1.skills'
       }
     ]
-    return { t, locale, additionalExperiences }
+
+    const mapExperience = (experience) => ({
+      id: experience._id,
+      title: locale.value === 'en' ? experience.titleEn || experience.title : experience.title,
+      role: locale.value === 'en' ? experience.roleEn || experience.role : experience.role,
+      date: experience.date,
+      description: locale.value === 'en' ? experience.descriptionEn || experience.description : experience.description,
+      skills: experience.role
+        ? experience.role.split(',').map((item) => item.trim()).filter(Boolean)
+        : []
+    })
+
+    const remoteAdditional = computed(() =>
+      remoteExperiences.value
+        .filter((item) => item.description || item.descriptionEn)
+        .map(mapExperience)
+    )
+
+    const remoteOther = computed(() =>
+      remoteExperiences.value
+        .filter((item) => !item.description && !item.descriptionEn)
+        .map(mapExperience)
+    )
+
+    const hasRemote = computed(() => remoteExperiences.value.length > 0)
+
+    onMounted(async () => {
+      if (!intranetApi.hasApi) return
+      try {
+        const payload = await intranetApi.get('secondary-experiences')
+        if (Array.isArray(payload)) {
+          remoteExperiences.value = payload
+        }
+      } catch (error) {
+        remoteExperiences.value = []
+      }
+    })
+
+    return {
+      t,
+      locale,
+      fallbackAdditional,
+      remoteAdditional,
+      remoteOther,
+      hasRemote
+    }
   }
 }
 </script>
