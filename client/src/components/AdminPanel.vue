@@ -82,12 +82,14 @@
       label-key="title"
       :fields="specialFields"
     />
+    <UserManager v-if="activeTab === 'users'" :token="token" />
   </section>
 </template>
 
 <script setup>
 import { computed, ref, watchEffect } from "vue";
 import ResourceManager from "./ResourceManager.vue";
+import UserManager from "./UserManager.vue";
 import { api } from "../services/api.js";
 
 const props = defineProps({
@@ -104,6 +106,7 @@ const tabs = [
   { key: "jobs", label: "Experiencia" },
   { key: "secondary", label: "Otros" },
   { key: "special", label: "Wrestling/Formación" },
+  { key: "users", label: "Usuarios" },
 ];
 
 const activeTab = ref("categories");

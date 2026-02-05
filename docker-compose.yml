@@ -34,6 +34,10 @@ services:
       NODE_ENV: production
       MONGO_URL: mongodb://mongo:27017/cesar_intranet
       JWT_SECRET: ${JWT_SECRET:-change_me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30d}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SEED_ON_START: ${SEED_ON_START:-false}
       UPLOADS_DIR: /app/uploads
     volumes:
       - uploads_data:/app/uploads

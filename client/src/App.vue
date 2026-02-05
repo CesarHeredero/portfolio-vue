@@ -16,7 +16,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { api } from "./services/api.js";
 import AdminLogin from "./components/AdminLogin.vue";
 import AdminPanel from "./components/AdminPanel.vue";
 import ToastMessage from "./components/ToastMessage.vue";
@@ -35,6 +36,19 @@ const logout = () => {
   localStorage.removeItem("intranet_token");
   message.value = "Sesión cerrada";
 };
+
+const refreshToken = async () => {
+  if (!token.value) return;
+  try {
+    const { token: refreshed } = await api.refreshToken(token.value);
+    token.value = refreshed;
+    localStorage.setItem("intranet_token", refreshed);
+  } catch (error) {
+    logout();
+  }
+};
+
+onMounted(refreshToken);
 </script>
 
 <style scoped>

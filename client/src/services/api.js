@@ -23,6 +23,13 @@ export const api = {
         body: JSON.stringify(payload),
       })
     ),
+  refreshToken: async (token) =>
+    handleResponse(
+      await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        headers: buildHeaders(token),
+      })
+    ),
   get: async (resource, token) =>
     handleResponse(
       await fetch(`${API_BASE}/${resource}`, {
@@ -59,6 +66,35 @@ export const api = {
         headers: buildHeaders(token),
         body: JSON.stringify(payload),
         signal,
+      })
+    ),
+  getUsers: async (token) =>
+    handleResponse(
+      await fetch(`${API_BASE}/users`, {
+        headers: buildHeaders(token),
+      })
+    ),
+  createUser: async (payload, token) =>
+    handleResponse(
+      await fetch(`${API_BASE}/users`, {
+        method: "POST",
+        headers: buildHeaders(token),
+        body: JSON.stringify(payload),
+      })
+    ),
+  updateUserPassword: async (id, payload, token) =>
+    handleResponse(
+      await fetch(`${API_BASE}/users/${id}/password`, {
+        method: "PUT",
+        headers: buildHeaders(token),
+        body: JSON.stringify(payload),
+      })
+    ),
+  removeUser: async (id, token) =>
+    handleResponse(
+      await fetch(`${API_BASE}/users/${id}`, {
+        method: "DELETE",
+        headers: buildHeaders(token),
       })
     ),
 };

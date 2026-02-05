@@ -2,11 +2,13 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "change_me";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30d";
 
-router.post("/register", async (req, res) => {
+router.post("/register", requireAuth, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -48,7 +50,20 @@ router.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, {
-    expiresIn: "12h",
+    expiresIn: JWT_EXPIRES_IN,
+  });
+
+  res.json({ token });
+});
+
+router.post("/refresh", requireAuth, async (req, res) => {
+  const { id, email } = req.user || {};
+  if (!id || !email) {
+    return res.status(401).json({ message: "Token inválido" });
+  }
+
+  const token = jwt.sign({ id, email }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
   });
 
   res.json({ token });
