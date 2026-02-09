@@ -39,12 +39,34 @@ router.post("/login", async (req, res) => {
     return res.status(401).json({ message: "Credenciales inválidas" });
   }
 
-  const passwordHash = user.passwordHash || user.password || user.hash;
-  if (!passwordHash) {
+  const storedPassword = user.passwordHash || user.password || user.hash;
+  if (!storedPassword) {
     return res.status(401).json({ message: "Credenciales inválidas" });
   }
 
-  const ok = await bcrypt.compare(password, passwordHash);
+  const isBcryptHash =
+    typeof storedPassword === "string" && storedPassword.startsWith("$2");
+  let ok = false;
+
+  if (isBcryptHash) {
+    ok = await bcrypt.compare(password, storedPassword);
+  } else {
+    ok = password === storedPassword;
+    if (ok) {
+      const newHash = await bcrypt.hash(password, 10);
+      const unset = {};
+      if (user.password) unset.password = "";
+      if (user.hash) unset.hash = "";
+
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: { passwordHash: newHash },
+          ...(Object.keys(unset).length ? { $unset: unset } : {}),
+        }
+      );
+    }
+  }
   if (!ok) {
     return res.status(401).json({ message: "Credenciales inválidas" });
   }
@@ -56,17 +78,31 @@ router.post("/login", async (req, res) => {
   res.json({ token });
 });
 
-router.post("/refresh", requireAuth, async (req, res) => {
-  const { id, email } = req.user || {};
-  if (!id || !email) {
+router.post("/refresh", async (req, res) => {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ message: "Token requerido" });
+  }
+
+  let payload;
+  try {
+    payload = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
+  } catch (error) {
     return res.status(401).json({ message: "Token inválido" });
   }
 
-  const token = jwt.sign({ id, email }, JWT_SECRET, {
+  const user = await User.findById(payload.id);
+  if (!user) {
+    return res.status(401).json({ message: "Token inválido" });
+  }
+
+  const refreshed = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
   });
 
-  res.json({ token });
+  res.json({ token: refreshed });
 });
 
 export default router;
