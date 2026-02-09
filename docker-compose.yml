@@ -63,7 +63,9 @@ services:
 
 volumes:
   mongo_data:
+    name: intranet_mongo_data
   uploads_data:
+    name: intranet_uploads_data
 
 networks:
   intranet:
